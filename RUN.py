@@ -1,11 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, redirect, url_for
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import numpy as np
 
 app = Flask(__name__)
 
-# Dataset
 X = np.array([
     [4,0,0],[5,0,0],[6,1,0],
     [7,1,1],[8,1,1],[9,2,1],
@@ -13,11 +12,8 @@ X = np.array([
 ])
 y = [0,0,0, 1,1,1, 2,2,2]
 
-# Train model
 model = LogisticRegression()
 model.fit(X, y)
-
-# Accuracy
 accuracy = accuracy_score(y, model.predict(X)) * 100
 
 def features(pwd):
@@ -27,146 +23,148 @@ def features(pwd):
         sum(not c.isalnum() for c in pwd)
     ]]
 
-@app.route("/", methods=["GET","POST"])
-def home():
-    result = ""
-    width = "0%"
-    if request.method == "POST":
-        pwd = request.form["pwd"]
-        pred = model.predict(features(pwd))[0]
-        result = ["Weak", "Medium", "Strong"][pred]
-        width = ["30%", "65%", "100%"][pred]
-
-    return f"""
-<!DOCTYPE html>
-<html>
-<head>
-<title>Password Strength Checker</title>
+css = """
 <style>
-:root {{
-    --bg: #f4f6f8;
-    --card: #ffffff;
-    --text: #1f2933;
-    --sub: #6b7280;
-}}
+* { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-@media (prefers-color-scheme: dark) {{
-    :root {{
-        --bg: #111827;
-        --card: #1f2933;
-        --text: #f9fafb;
-        --sub: #9ca3af;
-    }}
-}}
-
-body {{
-    background: var(--bg);
-    font-family: "Segoe UI", sans-serif;
+body {
+    background: #0f172a;
+    color: #e5e7eb;
     display: flex;
     justify-content: center;
-    padding: 40px;
-}}
+    align-items: center;
+    height: 100vh;
+}
 
-.container {{
-    background: var(--card);
-    width: 520px;
+.card {
+    background: #020617;
+    width: 420px;
     padding: 35px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-}}
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
 
-h2,h3 {{
-    color: var(--text);
-}}
+h2 {
+    margin-bottom: 5px;
+}
 
-p,li,td {{
-    color: var(--sub);
+p {
+    color: #94a3b8;
     font-size: 14px;
-}}
+}
 
-input {{
+input {
     width: 100%;
     padding: 12px;
+    margin-top: 12px;
     border-radius: 8px;
-    border: 1px solid #d1d5db;
-    margin-top: 10px;
-}}
+    border: 1px solid #1e293b;
+    background: #020617;
+    color: #e5e7eb;
+}
 
-button {{
+button {
     width: 100%;
-    margin-top: 15px;
     padding: 12px;
+    margin-top: 18px;
     background: #2563eb;
-    color: white;
     border: none;
     border-radius: 8px;
+    color: white;
     cursor: pointer;
-}}
+    font-size: 15px;
+}
 
-.bar {{
+button:hover {
+    background: #1e40af;
+}
+
+.bar {
     height: 8px;
-    background: #e5e7eb;
-    border-radius: 5px;
+    background: #1e293b;
+    border-radius: 6px;
+    margin-top: 10px;
     overflow: hidden;
-    margin-top: 10px;
-}}
+}
 
-.fill {{
+.fill {
     height: 100%;
-    width: {width};
     background: linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);
-}}
+}
 
-table {{
-    width: 100%;
-    border-collapse: collapse;
+a {
+    color: #60a5fa;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.error {
+    color: #f87171;
     margin-top: 10px;
-}}
-
-td {{
-    border-bottom: 1px solid #e5e7eb;
-    padding: 6px;
-}}
+}
 </style>
-</head>
-
-<body>
-<div class="container">
-
-<h2>Password Strength Checker</h2>
-<p>Machine Learning based password security evaluation</p>
-
-<form method="post">
-    <input type="password" name="pwd" placeholder="Enter password" required>
-    <button>Evaluate</button>
-</form>
-
-<h3>Strength</h3>
-<div class="bar"><div class="fill"></div></div>
-<p><b>{result}</b></p>
-
-<h3>Model Accuracy</h3>
-<p>{accuracy:.2f}% on training data</p>
-
-<h3>How ML Works</h3>
-<ul>
-<li>Password length</li>
-<li>Number of digits</li>
-<li>Number of special characters</li>
-</ul>
-
-<h3>Sample Dataset</h3>
-<table>
-<tr><td>abc</td><td>Weak</td></tr>
-<tr><td>abc123</td><td>Medium</td></tr>
-<tr><td>Abc@12345</td><td>Strong</td></tr>
-</table>
-
-</div>
-</body>
-</html>
 """
+
+# ---------------- LOGIN PAGE ----------------
+@app.route("/", methods=["GET","POST"])
+def login():
+    error = ""
+    if request.method == "POST":
+        if request.form["username"] == "admin" and request.form["password"] == "admin123":
+            return redirect(url_for("checker"))
+        else:
+            error = "Invalid username or password"
+
+    return f"""
+    {css}
+    <div class="card">
+        <h2>Secure Login</h2>
+        <p>Access the password strength analyzer</p>
+
+        <form method="post">
+            <input name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button>Login</button>
+        </form>
+
+        <div class="error">{error}</div>
+    </div>
+    """
+
+# ---------------- PASSWORD CHECKER ----------------
+@app.route("/checker", methods=["GET","POST"])
+def checker():
+    result = ""
+    width = "0%"
+
+    if request.method == "POST":
+        pred = model.predict(features(request.form["pwd"]))[0]
+        result = ["Weak","Medium","Strong"][pred]
+        width = ["30%","65%","100%"][pred]
+
+    return f"""
+    {css}
+    <div class="card">
+        <h2>Password Strength Checker</h2>
+        <p>ML-based password security evaluation</p>
+
+        <form method="post">
+            <input type="password" name="pwd" placeholder="Enter password" required>
+            <button>Evaluate</button>
+        </form>
+
+        <div class="bar">
+            <div class="fill" style="width:{width}"></div>
+        </div>
+
+        <p><b>{result}</b></p>
+        <p>Model Accuracy: {accuracy:.2f}%</p>
+
+        <a href="/">Logout</a>
+    </div>
+    """
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
