@@ -1,25 +1,10 @@
-Password Strength Prediction (ML)
+Password Strength Prediction Using ML
 
-A simple Machine Learning project that predicts password strength using a Flask web app.
+A simple Flask app that predicts password strength (Weak/Medium/Strong) using Logistic Regression.
 
-🚀 Features
-
-Predicts Weak / Medium / Strong passwords
-
-Uses Logistic Regression
-
-Clean professional UI
-
-No JavaScript
-
-Single-file Flask app
-
-🛠 Technologies
-
-Python
-
-Flask
-
-Scikit-learn
-
-NumPy
+Features
+- Secure login system
+- Password strength prediction
+- Dark-mode professional UI
+- Visual strength bar
+- Simple ML model
